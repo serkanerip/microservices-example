@@ -6,26 +6,21 @@ import (
 	"log"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/serkanerip/microservices/catalog/test/containers"
-
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
-var (
-	client     *mongo.Client
-	collection *mongo.Collection
-	repo       ProductRepository
-	ctx        = context.Background()
-)
+var ctx = context.Background()
 
 func getRepo(connParams GetMongoDBConnectionParams) ProductRepository {
 	var err error
-	client, err = GetMongoDBConnection(context.Background(), connParams)
+	client, err := GetMongoDBConnection(context.Background(), connParams)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	collection = client.Database("test", nil).Collection("products", nil)
+	collection := client.Database("test", nil).Collection("products", nil)
 
 	return NewProductMongoRepository(collection)
 }
@@ -39,8 +34,7 @@ func TestProductMongoRepository_CreateProduct(t *testing.T) {
 
 	repo := getRepo(GetMongoDBConnectionParams{URI: fmt.Sprintf("mongodb://localhost:%s/", mongoC.Port)})
 
-	p := Product{
-		ID:          "p-1",
+	p := CreateProductDTO{
 		Name:        "Macbook PRO 16'",
 		Category:    "Laptops",
 		Summary:     "Best laptop ever",
@@ -48,19 +42,17 @@ func TestProductMongoRepository_CreateProduct(t *testing.T) {
 		ImageFile:   "",
 		Price:       2499.99,
 	}
-	err = repo.CreateProduct(ctx, p)
+	createdProduct, err := repo.CreateProduct(ctx, p)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	actualProduct, err := repo.GetProduct(ctx, p.ID)
+	actualProduct, err := repo.GetProduct(ctx, createdProduct.ID.Hex())
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if *actualProduct != p {
-		t.Fatal("expected ", p, " actual is ", actualProduct)
-	}
+	assert.Equal(t, createdProduct, actualProduct)
 }
 
 func TestProductMongoRepository_DeleteProduct(t *testing.T) {
@@ -72,8 +64,7 @@ func TestProductMongoRepository_DeleteProduct(t *testing.T) {
 
 	repo := getRepo(GetMongoDBConnectionParams{URI: fmt.Sprintf("mongodb://localhost:%s/", mongoC.Port)})
 
-	p := Product{
-		ID:          "p-1",
+	p := CreateProductDTO{
 		Name:        "Macbook PRO 16'",
 		Category:    "Laptops",
 		Summary:     "Best laptop ever",
@@ -81,12 +72,12 @@ func TestProductMongoRepository_DeleteProduct(t *testing.T) {
 		ImageFile:   "",
 		Price:       2499.99,
 	}
-	err = repo.CreateProduct(ctx, p)
+	createdProduct, err := repo.CreateProduct(ctx, p)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = repo.DeleteProduct(ctx, p.ID)
+	err = repo.DeleteProduct(ctx, createdProduct.ID.Hex())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -110,8 +101,7 @@ func TestProductMongoRepository_GetProductsByName(t *testing.T) {
 
 	repo := getRepo(GetMongoDBConnectionParams{URI: fmt.Sprintf("mongodb://localhost:%s/", mongoC.Port)})
 
-	p := Product{
-		ID:          "p-1",
+	dto := CreateProductDTO{
 		Name:        "Macbook PRO 16'",
 		Category:    "Laptops",
 		Summary:     "Best laptop ever",
@@ -119,12 +109,12 @@ func TestProductMongoRepository_GetProductsByName(t *testing.T) {
 		ImageFile:   "",
 		Price:       2499.99,
 	}
-	err = repo.CreateProduct(ctx, p)
+	_, err = repo.CreateProduct(ctx, dto)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	products, err := repo.GetProductsByName(ctx, p.Name)
+	products, err := repo.GetProductsByName(ctx, dto.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -133,7 +123,7 @@ func TestProductMongoRepository_GetProductsByName(t *testing.T) {
 		t.Fatal("products length should be one!")
 	}
 
-	products, err = repo.GetProductsByName(ctx, p.Name+"x")
+	products, err = repo.GetProductsByName(ctx, dto.Name+"x")
 	if err != nil {
 		t.Fatal(err)
 	}

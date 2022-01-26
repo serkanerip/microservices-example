@@ -15,7 +15,7 @@ type ProductRepository interface {
 	GetProduct(ctx context.Context, id string) (*Product, error)
 	GetProductsByName(ctx context.Context, name string) ([]Product, error)
 	GetProductsByCategory(ctx context.Context, category string) ([]Product, error)
-	CreateProduct(ctx context.Context, p CreateProductDTO) error
+	CreateProduct(ctx context.Context, p CreateProductDTO) (*Product, error)
 	UpdateProduct(ctx context.Context, p ProductDTO) error
 	DeleteProduct(ctx context.Context, id string) error
 }
@@ -67,9 +67,21 @@ func (p *ProductMongoRepository) GetProductsByCategory(ctx context.Context, cate
 	return p.findProducts(ctx, bson.M{"category": category})
 }
 
-func (p *ProductMongoRepository) CreateProduct(ctx context.Context, product CreateProductDTO) error {
-	_, err := p.c.InsertOne(ctx, product, nil)
-	return err
+func (p *ProductMongoRepository) CreateProduct(ctx context.Context, dto CreateProductDTO) (*Product, error) {
+	ins, err := p.c.InsertOne(ctx, dto, nil)
+	if err != nil {
+		return nil, err
+	}
+	s := ins.InsertedID.(primitive.ObjectID)
+	return &Product{
+		ID:          s,
+		Name:        dto.Name,
+		Category:    dto.Category,
+		Summary:     dto.Summary,
+		Description: dto.Description,
+		ImageFile:   dto.ImageFile,
+		Price:       dto.Price,
+	}, nil
 }
 
 func (p *ProductMongoRepository) UpdateProduct(ctx context.Context, product ProductDTO) error {

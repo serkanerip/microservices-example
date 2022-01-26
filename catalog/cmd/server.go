@@ -35,5 +35,5 @@ func main() {
 	app.Put("/api/v1/catalog/", controller.UpdateProduct)
 	app.Delete("/api/v1/catalog/:id", controller.DeleteProduct)
 
-	log.Fatal(app.Listen(":3000"))
+	log.Fatal(app.Listen(":8000"))
 }

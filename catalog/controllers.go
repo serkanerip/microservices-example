@@ -47,13 +47,13 @@ func (p *ProductsController) CreteProduct(c *fiber.Ctx) error {
 		c.Status(http.StatusPreconditionFailed)
 		return c.JSON(map[string]string{"msg": "Invalid request body"})
 	}
-	err := p.r.CreateProduct(c.Context(), product)
+	createdProduct, err := p.r.CreateProduct(c.Context(), product)
 	if err != nil {
 		c.Status(http.StatusInternalServerError)
 		return c.JSON(map[string]string{"msg": "Error"})
 	}
 	c.Status(http.StatusCreated)
-	return c.JSON(map[string]string{"msg": "Product created"})
+	return c.JSON(createdProduct)
 }
 
 func (p *ProductsController) UpdateProduct(c *fiber.Ctx) error {
