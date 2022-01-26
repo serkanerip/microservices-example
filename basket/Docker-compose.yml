@@ -1,0 +1,16 @@
+version: "3.9"
+services:
+  redis:
+    image: redis
+    restart: always
+  api:
+    build:
+      context: .
+    depends_on:
+      - redis
+    ports:
+      - "8001:8001"
+    environment:
+      REDIS_URI: redis:6379
+      REDIS_PASSWORD: ""
+      REDIS_DB: 0
