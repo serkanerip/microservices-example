@@ -1,0 +1,26 @@
+version: "3.9"
+services:
+  postgres:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: postgres
+  pgAdmin:
+    image: dpage/pgadmin4
+    restart: always
+    depends_on:
+      - postgres
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: root
+    ports:
+      - "8080:80"
+  api:
+    build:
+      context: .
+    depends_on:
+      - postgres
+    environment:
+      MONGO_URI: mongodb://root:toor@mongo:27017/
+    ports:
+      - "8002:8002"
